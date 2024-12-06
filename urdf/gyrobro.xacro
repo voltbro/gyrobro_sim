@@ -1,0 +1,172 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="gyrobro">
+
+  <material name="blue">
+    <color rgba="0 0.5 1 1"/>
+  </material>
+
+  <material name="white">
+    <color rgba="1 1 1 1"/>
+  </material>
+
+  <material name="black">
+    <color rgba="0 0 0 1"/>
+  </material>
+
+  <xacro:property name="mesh_addr" value="/home/yoggi/gyrobro/gyrobro_mpc/meshes"/>
+
+  <xacro:property name="body_mass" value="3.29"/>
+  <xacro:property name="axis_mass" value="1.124"/>
+  <xacro:property name="wheel_mass" value="0.977"/>
+  <!-- ДОБАВИТЬ ПОЛОЖЕНИЯ ЦМ И ИНЕРЦИИ! -->
+  <xacro:property name="body_cog_x" value="0.0"/>
+  <xacro:property name="body_cog_y" value="0.0"/>
+  <xacro:property name="body_cog_z" value="0.07"/>
+
+  <xacro:property name="body_ixx" value="1e-3"/>
+  <xacro:property name="body_ixy" value="0.0"/>
+  <xacro:property name="body_ixz" value="0.0"/>
+  <xacro:property name="body_iyy" value="1e-3"/>
+  <xacro:property name="body_iyz" value="0.0"/>
+  <xacro:property name="body_izz" value="1e-3"/>
+
+  <xacro:property name="wheel_radius" value="0.159"/>
+
+  <!-- Body -->
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <mesh filename="${mesh_addr}/body_simple.STL" scale="1 1 1"/>
+      </geometry>
+      <material name="white"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="${mesh_addr}/body_simple.STL" scale="1 1 1"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="0.0001"/>
+      <inertia ixx="1e-10" ixy="0" ixz="0"
+        iyy="1e-10" iyz="0"
+        izz="1e-10" />
+    </inertial>
+  </link>
+
+  <link name="base_inertia">
+    <inertial>
+      <origin rpy="0 0 0" xyz="${body_cog_x} ${body_cog_y} ${body_cog_z}"/>
+      <mass value="${body_mass}"/>
+      <inertia ixx="${body_ixx}" ixy="${body_ixy}" ixz="${body_ixz}"
+        iyy="${body_iyy}" iyz="${body_iyz}"
+        izz="${body_izz}" />
+    </inertial>
+  </link>
+  <joint name="base_link_to_base_inertia" type="fixed">
+      <parent link="base_link"/>
+      <child link="base_inertia"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+  </joint>
+
+  
+
+  <link name="wheel_axis">
+    <visual>
+      <geometry>
+        <mesh filename="${mesh_addr}/axis_simple.STL" scale="1 1 1"/>
+      </geometry>
+      <material name="black"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </visual>
+    <inertial>
+      <mass value="${axis_mass}"/>
+      <inertia ixx="1e-3" ixy="0.0" ixz="0.0" iyy="1e-3" iyz="0.0" izz="1e-3"/>
+    </inertial>
+  </link>
+
+  <joint name="base_to_axis" type="fixed">
+    <parent link="base_link"/>
+    <child link="wheel_axis"/>
+    <origin xyz="0 0 -0.19" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Left Wheel -->
+  <link name="left_wheel">
+    <visual>
+      <geometry>
+        <mesh filename="${mesh_addr}/wheel_simple.STL" scale="1 1 1"/>
+      </geometry>
+      <material name="blue"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="${mesh_addr}/wheel_simple.STL" scale="1 1 1"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="${wheel_mass}"/>
+      <inertia ixx="1e-3" ixy="0.0" ixz="0.0" iyy="1e-3" iyz="0.0" izz="1e-3"/>
+    </inertial>
+  </link>
+
+  <joint name="left_wheel_joint" type="continuous">
+    <axis xyz="0 0 1"/>
+    <origin rpy="-1.57075 0 0" xyz="0.0 0.2115 0"/>
+    <parent link="wheel_axis"/>
+    <child link="left_wheel"/>
+  </joint>
+
+  <!-- Right Wheel -->
+  <link name="right_wheel">
+    <visual>
+      <geometry>
+        <mesh filename="${mesh_addr}/wheel_simple.STL" scale="1 1 1"/>
+      </geometry>
+      <material name="blue"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="${mesh_addr}/wheel_simple.STL" scale="1 1 1"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="${wheel_mass}"/>
+      <inertia ixx="1e-3" ixy="0.0" ixz="0.0" iyy="1e-3" iyz="0.0" izz="1e-3"/>
+    </inertial>
+  </link>
+
+  <joint name="right_wheel_joint" type="continuous">
+    <axis xyz="0 0 1"/>
+    <origin rpy="1.57075 0 0" xyz="0.0 -0.2115 0"/>
+    <parent link="wheel_axis"/>
+    <child link="right_wheel"/>
+  </joint>
+
+  <!-- Limiter -->
+  <link name="limiter_link">
+    <visual>
+      <geometry>
+        <box size="0.44 0.018 0.018"/>
+      </geometry>
+      <material name="white"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.44 0.018 0.018"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.001"/>
+      <inertia ixx="1e-6" ixy="0.0" ixz="0.0" iyy="1e-6" iyz="0.0" izz="1e-6"/>
+    </inertial>
+  </link>
+  <joint name="base_link_to_limiter" type="fixed">
+      <parent link="base_link"/>
+      <child link="limiter_link"/>
+      <origin rpy="0 0 0" xyz="0 0 -0.19"/>
+  </joint>
+
+</robot>
